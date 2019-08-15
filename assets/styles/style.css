@@ -1,0 +1,6 @@
+.card .card-title {
+    padding-left: 5px;
+}
+tbody tr:first-child {
+    display: none;
+}

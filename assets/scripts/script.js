@@ -10,7 +10,7 @@ const script = function() {
             let hours = train.time.substring(0, colonIndex);
             let minutes = train.time.substring(colonIndex + 1);
             if (_isNumeric(hours) && _isNumeric(minutes)) {
-                train.time = (parseInt(hours) * 60)%24 + parseInt(minutes);
+                train.time = (parseInt(hours)%24 * 60) + parseInt(minutes);
                 timeIsValid = true;
             }
         }
@@ -32,9 +32,11 @@ const script = function() {
             let train = trainsParam[i];
             const date = new Date();
             const currentTime = (date.getHours() * 60) + date.getMinutes();
-            const timeLeft = (currentTime - train.time)%train.frequency;
-            trainsParam[i].next_arrival = _displayTime(currentTime + timeLeft);
-            trainsParam[i].mins_away = timeLeft;
+            let loopsRun = Math.ceil((currentTime - train.time)/train.frequency);
+            if (train.time > currentTime) loopsRun = 0;
+            const nextArrival = (loopsRun * train.frequency) + train.time;
+            trainsParam[i].next_arrival = nextArrival;
+            trainsParam[i].mins_away = nextArrival - currentTime;
         }
         return trainsParam;
     }
@@ -46,7 +48,7 @@ const script = function() {
         let isPm = hours >= 12;
         hours = hours - (isPm ? 12 : 0);
         hours = (hours >= 10 ? "" : "0") + hours;
-        minutes = (minutes >= 10 ? "" : "0") +minutes;
+        minutes = (minutes >= 10 ? "" : "0") + minutes;
         return hours + ":" + minutes + (isPm ? "pm" : "am");
     }
 
@@ -60,7 +62,7 @@ const script = function() {
             cells[0].textContent = train.name;
             cells[1].textContent = train.destination;
             cells[2].textContent = train.frequency;
-            cells[3].textContent = train.next_arrival;
+            cells[3].textContent = _displayTime(train.next_arrival);
             cells[4].textContent = train.mins_away;
             document.getElementById("tableBody").append(newRow);
         }
@@ -83,6 +85,7 @@ const script = function() {
         _rowTemplate = document.getElementById("tableBody").getElementsByTagName("tr")[0];
         _displayTrains();
         document.getElementById("form").addEventListener("submit", _addTrain);
+        setInterval(_displayTrains, 100);
     });
 }();
 
@@ -115,7 +118,7 @@ let trains = [
         name: "Boston Bus",
         destination: "Boston",
         frequency: 5,
-        time: (60*18)+50
+        time: (60*19)+45
     },
     {
         name: "California Caravan",
